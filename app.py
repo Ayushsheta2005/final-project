@@ -566,6 +566,7 @@ def photos():
         cursor = conn.cursor()
         cursor.close()
         print(session['id'])
+        images = []
         for row in image_data:
             id = row[0]
             filename = row[2]
