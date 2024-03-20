@@ -12,7 +12,7 @@ import psycopg2
 import io
 import tempfile
 
-db_url = "postgresql://shail_369:rkkkT45_7SwCazYO00GEvA@slideshow-9000.8nk.gcp-asia-southeast1.cockroachlabs.cloud:26257/slideshow?sslmode=verify-full"
+db_url = "postgresql://shail_369:rkkkT45_7SwCazYO00GEvA@slideshow-9000.8nk.gcp-asia-southeast1.cockroachlabs.cloud:26257/slideshow?sslmode=verify-full&sslrootcert=root.crt"
 
 conn = psycopg2.connect(db_url)
 cursor = conn.cursor()
