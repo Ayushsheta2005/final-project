@@ -97,7 +97,7 @@ function processFile(file) {
       var a = document.getElementById("imageInput");
       console.log(a.files);
       imageContainer.appendChild(image);
-      imageContainer.appendChild(closeButton);
+      // imageContainer.appendChild(closeButton);
 
       document.getElementById("imagePreview").appendChild(imageContainer);
       updateChosenImages();
@@ -136,7 +136,7 @@ function processFile(file) {
     //  });
 
       imageContainer.appendChild(image);
-      imageContainer.appendChild(closeButton);
+      // imageContainer.appendChild(closeButton);
       var a = document.getElementById("imageInput");
       console.log(a.files);
       document.getElementById("imagePreview").appendChild(imageContainer);

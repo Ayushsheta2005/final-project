@@ -14,10 +14,11 @@ import tempfile
 
 db_url = "postgresql://shail_369:rkkkT45_7SwCazYO00GEvA@slideshow-9000.8nk.gcp-asia-southeast1.cockroachlabs.cloud:26257/slideshow?sslmode=verify-full&sslrootcert=root.crt"
 
+
 conn = psycopg2.connect(db_url)
 cursor = conn.cursor()
 
-current = 1280
+current = 960
 
 SECRET_KEY = "suspense"
 
@@ -75,8 +76,8 @@ def images_to_video(selected_images):
     cursor.close()
 
     images = []
-    max_height = 720
-    max_width = 1280
+    max_height = 560
+    max_width = 960
     for image_data in images_data:
         image_array = np.frombuffer(image_data[0], np.uint8)
         frame = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
@@ -113,8 +114,8 @@ def images_to_video(selected_images):
         video_path = os.path.join(app.static_folder, 'new_output_video.mp4')
         original_video = VideoFileClip(input_filepath)
         print("Video generated successfully:", output_video)
-        if current == 1280:
-            new_resolution = (1280,720)
+        if current == 960:
+            new_resolution = (960,560)
         elif current == 1920:
             new_resolution = (1920,1080)
         else:
@@ -144,8 +145,8 @@ def change_duration(selected_images, duration,transition):
 
     final_frames_with_durations = []
     
-    max_width = 1280
-    max_height = 720
+    max_width = 960
+    max_height = 560
     for image_data in images:
         filename = image_data[0]
         if filename in selected_images:
@@ -170,8 +171,8 @@ def transitions(selected_images, transition):
         cursor.close()
         
         final_clips = []
-        max_width = 1280
-        max_height = 720
+        max_width = 960
+        max_height = 560
         
         for image_data in images:
             filename = image_data[0]
@@ -370,8 +371,8 @@ def multiple_audio(selected_Music, selected_duration):
     input_filepath = os.path.join(upload_dir, 'output_video.mp4')
     video_path = os.path.join(app.static_folder, 'new_output_video.mp4')
     original_video = VideoFileClip(input_filepath)
-    if current == 1280:
-        new_resolution = (1280,720)
+    if current == 960:
+        new_resolution = (960,560)
     if current == 1920:
         new_resolution = (1920,1080)
     if current == 480:
@@ -425,10 +426,10 @@ def login():
 
 @app.route('/home2')
 def home2():
-    cursor = conn.cursor()
-    cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1))
-    conn.commit()
-    cursor.close()
+    # cursor = conn.cursor()
+    # cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1))
+    # conn.commit()
+    # cursor.close()
     return render_template('home2.html', username=session['username'], email=session['email'], name=session['name'])
 
 @app.route('/duration', methods=['GET', 'POST'])
@@ -444,10 +445,10 @@ def duration():
 
 @app.route('/addpics', methods=['GET', 'POST'])
 def addpics():
-    cursor = conn.cursor()
-    cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1))
-    conn.commit()
-    cursor.close()
+    # cursor = conn.cursor()
+    # cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1))
+    # conn.commit()
+    # cursor.close()
     if request.method == 'POST':
         time.sleep(0.5)
         files = request.files.getlist('imageInput')
@@ -468,10 +469,12 @@ def addpics():
             if not user:
                 with tempfile.NamedTemporaryFile(delete=False) as temp_file:
                     temp_file.write(file.read())
+                    # temp_file.seek(0)
+                    # filesize = os.fstat(temp_file.fileno()).st_size
                 # file.save(filepath) 
-                filesize = os.path.getsize(filepath)
-                filetype = file.mimetype
                 temp_file_path = temp_file.name
+                filesize = os.path.getsize(temp_file_path)
+                filetype = file.mimetype
                 with open(temp_file_path, 'rb') as f:
                     image_data = f.read()
                 cursor = conn.cursor()
@@ -498,7 +501,7 @@ def resize_video():
         original_video = VideoFileClip(input_filepath)
         resolution_options = {
             'high': (1920, 1080),
-            'medium': (1280, 720),
+            'medium': (960, 560),
             'low': (480, 360),
             'none': original_video.size
         }
@@ -508,8 +511,8 @@ def resize_video():
             current = 1920
             new_resolution = (1920,1080)
         if desired_resolution == "medium":
-            current = 1280
-            new_resolution = (1280,720)
+            current = 960
+            new_resolution = (960,560)
         if desired_resolution == "low":
             current = 480
             new_resolution = (480,360)
@@ -552,21 +555,21 @@ def photos():
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM picture WHERE user_id = %s AND video = %s', (session['id'],1))
         image_data = cursor.fetchall()
-        
+        # cursor = conn.cursor()
+        # cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1))
+        # conn.commit()
+        # cursor.close()
         cursor = conn.cursor()
-        cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1))
+        cursor.execute('TRUNCATE TABLE current')
         conn.commit()
         cursor.close()
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM current WHERE user_id = %s',(session['id'],))
-        cursor = conn.cursor()
-        cursor.close()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM audio WHERE user_id = %s',(session['id'],))
-        cursor = conn.cursor()
+        cursor.execute('TRUNCATE TABLE audio')
+        conn.commit()
         cursor.close()
         print(session['id'])
         images = []
+        print(image_data)
         for row in image_data:
             id = row[0]
             filename = row[2]
@@ -574,11 +577,13 @@ def photos():
             filetype = row[5]
             print(filename)
             encoded_image = base64.b64encode(image_file).decode('utf-8')
+            print("hello")
             cursor = conn.cursor()
             cursor.execute('INSERT INTO current (user_id, id, filename, image_data, duration, transition) VALUES (%s, %s, %s, %s, %s, %s)',
                        (session['id'],id,filename, image_file, 2, None,))
             conn.commit()
-            cursor.close()            
+            cursor.close()
+            print("hello")            
             images.append({'filename': filename, 'encoded_image': encoded_image, 'filetype': filetype})
         images_to_video(selected_images) 
         return render_template('videoview.html', username=session['username'], email=session['email'], name=session['name'], images = images)
@@ -609,25 +614,26 @@ def delete():
 
 @app.route('/account')
 def account():
-    cursor = conn.cursor()
-    cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1,))
-    conn.commit()
-    cursor.close()
+    # cursor = conn.cursor()
+    # cursor.execute('UPDATE picture SET video = %s WHERE video = %s' , (0,1,))
+    # conn.commit()
+    # cursor.close()
     return render_template('account.html', username=session['username'], email=session['email'], name=session['name'])
 
 @app.route('/admin', methods=['GET','POST'])
 def admin():
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM kaptaan')
+    cursor.execute('SELECT k.id, k.username, k.email, COUNT(k.id) AS log, COUNT(p.user_id) AS count FROM kaptaan k LEFT JOIN picture p ON k.id = p.user_id GROUP BY k.id')
     account = cursor.fetchall()
-    for user in account:
-        print(user.id)
-    cursor.close()
+    cursor.execute('SELECT COUNT(*) AS total_users FROM kaptaan')
+    total_users = cursor.fetchone()[0]
+    cursor.execute('SELECT COUNT(*) AS total_users FROM picture')
+    total_images = cursor.fetchone()[0]
     cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM picture GROUP BY user_id ORDER BY user_id')
     number = cursor.fetchall()
     cursor.close()
-    return render_template('admin.html', users = account)
+    return render_template('admin.html', users = account, total = total_users, images = total_images)
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -679,8 +685,9 @@ def admin_login():
             total_images = cursor.fetchone()[0]
             cursor.execute('SELECT k.id, k.username, k.email, COUNT(k.id) AS log, COUNT(p.user_id) AS count FROM kaptaan k LEFT JOIN picture p ON k.id = p.user_id GROUP BY k.id')
             account = cursor.fetchall()
+            print(account)
             cursor.close()
-            return render_template('admin.html', users = account,  total = total_users, images = total_images)
+            return redirect(url_for('admin'))
         else:
             message = 'You are not admin'
             return render_template('admin_login.html', message=message)
@@ -718,11 +725,11 @@ def logout():
     conn.commit()
     cursor.close()
     cursor = conn.cursor()
-    cursor.execute('DELETE FROM current WHERE user_id = %s',(session['id'],))
+    cursor.execute('TRUNCATE TABLE current')
     cursor = conn.cursor()
     cursor.close()
     cursor = conn.cursor()
-    cursor.execute('DELETE FROM audio WHERE user_id = %s',(session['id'],))
+    cursor.execute('TRUNCATE TABLE audio')
     cursor = conn.cursor()
     cursor.close()
     session.pop('username', None)
@@ -730,6 +737,13 @@ def logout():
     session.pop('username', None)
     session.pop('email', None)
     session.pop('id', None)
+    upload_dir = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+    video_path = os.path.join(upload_dir, "output_video.mp4")
+    if os.path.exists(video_path):
+            os.remove(video_path)
+    video_path = os.path.join(upload_dir, "new_output_video.mp4")
+    if os.path.exists(video_path):
+            os.remove(video_path)
     return render_template('home.html')
 
 @app.route('/delete_user', methods=['POST'])
